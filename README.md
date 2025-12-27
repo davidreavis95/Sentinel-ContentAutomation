@@ -96,6 +96,25 @@ az deployment group create \
   --parameters @parameters.json
 ```
 
+## 🔧 REST API Deployment
+
+The `deploy_rest.py` script uses Azure REST API directly instead of Azure CLI for deployment operations. This provides:
+
+- **Direct API Integration**: Makes REST API calls to Azure Resource Manager
+- **Flexible Authentication**: Supports Azure CLI, Managed Identity, Service Principal, Environment Variables
+- **Production Ready**: Includes error handling, polling, and detailed logging
+- **CI/CD Friendly**: Minimal dependencies and better suited for automation
+
+For detailed information about the REST API deployment approach, see [REST_API_GUIDE.md](REST_API_GUIDE.md).
+
+### Authentication Methods
+
+The script automatically detects and uses available credentials in this order:
+1. Azure CLI credentials (from `az login`)
+2. Managed Identity (when running in Azure)
+3. Service Principal (from environment variables)
+4. Other Azure Identity methods
+
 ## ⚙️ Configuration
 
 ### Parameters
