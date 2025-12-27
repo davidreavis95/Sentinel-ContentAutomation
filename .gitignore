@@ -1,0 +1,33 @@
+# Azure Bicep
+*.zip
+.bicep
+
+# Compiled Bicep files
+*.json
+!parameters.json
+!parameters.*.json
+
+# Azure CLI
+.azure/
+
+# Build artifacts
+*.deploymentparameters.json.bak
+deployment-outputs.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspaceName": {
+      "value": "sentinel-workspace-prod"
+    },
+    "location": {
+      "value": "eastus"
+    },
+    "workspaceSku": {
+      "value": "PerGB2018"
+    },
+    "dataRetention": {
+      "value": 90
+    },
+    "dailyQuotaGb": {
+      "value": -1
+    },
+    "deployAnalyticalRules": {
+      "value": true
+    },
+    "deployParsers": {
+      "value": true
+    },
+    "deployWorkbooks": {
+      "value": true
+    },
+    "deployHuntingQueries": {
+      "value": true
+    },
+    "deployWatchlists": {
+      "value": true
+    },
+    "tags": {
+      "value": {
+        "Environment": "Production",
+        "Project": "Sentinel-Automation",
+        "ManagedBy": "Bicep"
+      }
+    }
+  }
+}
