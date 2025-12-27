@@ -12,20 +12,7 @@ This guide provides quick commands to deploy Microsoft Sentinel using the automa
 
 ## Deployment Options
 
-### Option 1: Quick Deploy (PowerShell)
-
-```powershell
-# Login to Azure
-az login
-
-# Set your subscription (if you have multiple)
-az account set --subscription "Your-Subscription-Name-Or-ID"
-
-# Deploy Sentinel
-.\deploy.ps1 -ResourceGroupName "rg-sentinel-prod" -Location "eastus"
-```
-
-### Option 2: Quick Deploy (Bash)
+### Option 1: REST API Deployment (Recommended)
 
 ```bash
 # Login to Azure
@@ -34,15 +21,21 @@ az login
 # Set your subscription (if you have multiple)
 az account set --subscription "Your-Subscription-Name-Or-ID"
 
+# Install Python dependencies
+pip install -r requirements.txt
+
 # Deploy Sentinel
-./deploy.sh -g rg-sentinel-prod -l eastus
+python deploy_rest.py -g rg-sentinel-prod -l eastus
 ```
 
-### Option 3: Manual Azure CLI
+### Option 2: Azure CLI Direct
 
 ```bash
 # Login to Azure
 az login
+
+# Set your subscription (if you have multiple)
+az account set --subscription "Your-Subscription-Name-Or-ID"
 
 # Create resource group
 az group create --name rg-sentinel-prod --location eastus
