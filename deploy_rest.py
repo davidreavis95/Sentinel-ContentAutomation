@@ -300,14 +300,15 @@ class AzureRestDeployer:
                 print(f"Response: {e.response.text}")
             return None
     
-    def _poll_deployment(self, resource_group_name: str, deployment_name: str, timeout: int = 1800) -> Optional[Dict[str, Any]]:
+    def _poll_deployment(self, resource_group_name: str, deployment_name: str, timeout: int = 1800, poll_interval: int = 10) -> Optional[Dict[str, Any]]:
         """
         Poll deployment status until completion
         
         Args:
             resource_group_name: Name of the resource group
             deployment_name: Name of the deployment
-            timeout: Timeout in seconds (default 30 minutes)
+            timeout: Timeout in seconds (default 1800 = 30 minutes)
+            poll_interval: Seconds between polling attempts (default 10)
             
         Returns:
             Dict with deployment result or None if failed
@@ -332,7 +333,7 @@ class AzureRestDeployer:
                 if status in ['Succeeded', 'Failed', 'Canceled']:
                     return result
                 
-                time.sleep(10)  # Poll every 10 seconds
+                time.sleep(poll_interval)
                 
             except requests.exceptions.RequestException as e:
                 print(f"{Colors.RED}✗ Failed to poll deployment status: {str(e)}{Colors.NC}")
@@ -341,13 +342,14 @@ class AzureRestDeployer:
         print(f"{Colors.RED}✗ Deployment timed out after {timeout} seconds{Colors.NC}")
         return None
     
-    def _poll_async_operation(self, location_url: str, timeout: int = 300) -> Optional[Dict[str, Any]]:
+    def _poll_async_operation(self, location_url: str, timeout: int = 300, poll_interval: int = 5) -> Optional[Dict[str, Any]]:
         """
         Poll async operation until completion
         
         Args:
             location_url: URL to poll
-            timeout: Timeout in seconds (default 5 minutes)
+            timeout: Timeout in seconds (default 300 = 5 minutes)
+            poll_interval: Seconds between polling attempts (default 5)
             
         Returns:
             Dict with operation result or None if failed
@@ -361,7 +363,7 @@ class AzureRestDeployer:
                 if response.status_code == 200:
                     return response.json()
                 elif response.status_code == 202:
-                    time.sleep(5)  # Poll every 5 seconds
+                    time.sleep(poll_interval)
                 else:
                     return None
                     
