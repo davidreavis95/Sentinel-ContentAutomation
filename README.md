@@ -14,7 +14,7 @@ This repository provides Infrastructure-as-Code (IaC) using Azure Bicep to autom
 - **Bicep-Based**: Modern, type-safe Infrastructure as Code
 - **Modular Architecture**: Easily customize or extend content
 - **Multiple Environments**: Separate parameter files for dev/prod
-- **Cross-Platform Scripts**: PowerShell and Bash deployment scripts
+- **REST API Deployment**: Direct Azure REST API integration for deployment automation
 
 ## 📋 Prerequisites
 
@@ -23,7 +23,7 @@ Before deploying, ensure you have:
 1. **Azure Subscription** with appropriate permissions
 2. **Azure CLI** installed ([Install Guide](https://docs.microsoft.com/cli/azure/install-azure-cli))
 3. **Bicep CLI** (automatically installed with Azure CLI 2.20.0+)
-4. **PowerShell 7+** (for PowerShell script) or **Bash** (for shell script)
+4. **Python 3.8+** for REST API deployment script
 
 ### Required Azure Permissions
 
@@ -47,46 +47,36 @@ The deploying user/service principal needs:
 │   └── watchlists.bicep        # Reference data lists
 ├── parameters.json             # Production parameters
 ├── parameters.dev.json         # Development parameters
-├── deploy.ps1                  # PowerShell deployment script
-├── deploy.sh                   # Bash deployment script
+├── deploy_rest.py              # REST API deployment script
+├── requirements.txt            # Python dependencies
 └── README.md                   # This file
 ```
 
 ## 🎯 Quick Start
 
-### Option 1: PowerShell Deployment
-
-```powershell
-# Login to Azure
-az login
-
-# Deploy to production
-.\deploy.ps1 -ResourceGroupName "rg-sentinel-prod" -Location "eastus"
-
-# Deploy to development
-.\deploy.ps1 -ResourceGroupName "rg-sentinel-dev" -ParameterFile "parameters.dev.json"
-
-# Preview changes (What-If mode)
-.\deploy.ps1 -ResourceGroupName "rg-sentinel-prod" -WhatIf
-```
-
-### Option 2: Bash Deployment
+### REST API Deployment (Recommended)
 
 ```bash
 # Login to Azure
 az login
 
+# Install Python dependencies
+pip install -r requirements.txt
+
 # Deploy to production
-./deploy.sh -g rg-sentinel-prod -l eastus
+python deploy_rest.py -g rg-sentinel-prod -l eastus
 
 # Deploy to development
-./deploy.sh -g rg-sentinel-dev -p parameters.dev.json
+python deploy_rest.py -g rg-sentinel-dev -p parameters.dev.json
 
 # Preview changes (What-If mode)
-./deploy.sh -g rg-sentinel-prod -w
+python deploy_rest.py -g rg-sentinel-prod -w
+
+# Specify subscription explicitly
+python deploy_rest.py -g rg-sentinel-prod -s 12345678-1234-1234-1234-123456789012
 ```
 
-### Option 3: Azure CLI Direct
+### Alternative: Azure CLI Direct
 
 ```bash
 # Login to Azure
@@ -105,6 +95,25 @@ az deployment group create \
   --template-file main.bicep \
   --parameters @parameters.json
 ```
+
+## 🔧 REST API Deployment
+
+The `deploy_rest.py` script uses Azure REST API directly instead of Azure CLI for deployment operations. This provides:
+
+- **Direct API Integration**: Makes REST API calls to Azure Resource Manager
+- **Flexible Authentication**: Supports Azure CLI, Managed Identity, Service Principal, Environment Variables
+- **Production Ready**: Includes error handling, polling, and detailed logging
+- **CI/CD Friendly**: Minimal dependencies and better suited for automation
+
+For detailed information about the REST API deployment approach, see [REST_API_GUIDE.md](REST_API_GUIDE.md).
+
+### Authentication Methods
+
+The script automatically detects and uses available credentials in this order:
+1. Azure CLI credentials (from `az login`)
+2. Managed Identity (when running in Azure)
+3. Service Principal (from environment variables)
+4. Other Azure Identity methods
 
 ## ⚙️ Configuration
 

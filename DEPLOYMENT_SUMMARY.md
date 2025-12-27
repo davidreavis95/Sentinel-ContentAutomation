@@ -77,18 +77,15 @@ Features:
 
 ### 3. Deployment Automation
 
-#### PowerShell Script (deploy.ps1)
-- Cross-platform PowerShell 7+ support
-- Prerequisites validation
+#### REST API Deployment Script (deploy_rest.py)
+- Python-based deployment using Azure REST API
+- Direct integration with Azure Resource Manager
+- No dependency on Azure CLI for deployment (only for Bicep compilation)
+- Support for multiple authentication methods (Azure CLI, Managed Identity, Environment Variables)
 - What-if mode for preview
 - Colored output and progress tracking
-- Error handling and rollback support
-
-#### Bash Script (deploy.sh)
-- Linux/macOS compatible
-- Same features as PowerShell version
-- POSIX compliant
-- Interactive help system
+- Error handling and detailed logging
+- Verbose mode for troubleshooting
 
 ### 4. Configuration Management
 
@@ -173,11 +170,10 @@ Properly configured to exclude:
 
 ### Deployment Methods Supported
 
-1. PowerShell script (`deploy.ps1`)
-2. Bash script (`deploy.sh`)
-3. Direct Azure CLI
-4. Azure DevOps Pipelines (template ready)
-5. GitHub Actions (template ready)
+1. REST API deployment script (`deploy_rest.py`)
+2. Direct Azure CLI
+3. Azure DevOps Pipelines (BICEP templates ready)
+4. GitHub Actions (BICEP templates ready)
 
 ## Content Statistics
 
@@ -200,8 +196,8 @@ Sentinel-ContentAutomation/
 ├── main.bicep                           # Main template
 ├── parameters.json                      # Production parameters
 ├── parameters.dev.json                  # Development parameters
-├── deploy.ps1                           # PowerShell deployment script
-├── deploy.sh                            # Bash deployment script
+├── deploy_rest.py                       # REST API deployment script
+├── requirements.txt                     # Python dependencies
 ├── modules/
 │   ├── analyticalRules.bicep           # Alert rules module
 │   ├── parsers.bicep                   # Parser functions module
@@ -214,7 +210,7 @@ Sentinel-ContentAutomation/
 ```
 
 **Total Files**: 14
-**Lines of Code**: ~2,100+
+**Lines of Code**: ~2,500+
 
 ## Security Features
 
@@ -241,7 +237,7 @@ Sentinel-ContentAutomation/
 
 ### Quick Deploy
 ```bash
-./deploy.sh -g rg-sentinel-prod -l eastus
+python deploy_rest.py -g rg-sentinel-prod -l eastus
 ```
 
 ### Customize and Deploy
@@ -309,22 +305,27 @@ All modules are designed to be extended with additional content items.
    cd Sentinel-ContentAutomation
    ```
 
-2. **Review and Customize**
+2. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Review and Customize**
    - Edit parameter files
    - Review example content
    - Modify as needed
 
-3. **Deploy**
+4. **Deploy**
    ```bash
-   ./deploy.sh -g your-resource-group -l your-region
+   python deploy_rest.py -g your-resource-group -l your-region
    ```
 
-4. **Configure**
+5. **Configure**
    - Set up data connectors
    - Configure automation
    - Assign RBAC roles
 
-5. **Monitor and Maintain**
+6. **Monitor and Maintain**
    - Review incidents
    - Tune rules
    - Update content
