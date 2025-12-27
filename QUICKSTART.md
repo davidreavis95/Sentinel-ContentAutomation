@@ -6,6 +6,7 @@ This guide provides quick commands to deploy Microsoft Sentinel using the automa
 
 - [ ] Azure subscription with active access
 - [ ] Azure CLI installed and updated
+- [ ] Python 3.8+ installed
 - [ ] Appropriate Azure permissions (Sentinel Contributor or higher)
 - [ ] Logged in to Azure (`az login`)
 
@@ -86,14 +87,17 @@ Set `false` to skip any content type:
 
 ### Preview Changes (What-If)
 
-```powershell
-# PowerShell
-.\deploy.ps1 -ResourceGroupName "rg-sentinel-prod" -WhatIf
+```bash
+# REST API deployment
+python deploy_rest.py -g rg-sentinel-prod -w
 ```
 
 ```bash
-# Bash
-./deploy.sh -g rg-sentinel-prod -w
+# Azure CLI
+az deployment group what-if \
+  --resource-group rg-sentinel-prod \
+  --template-file main.bicep \
+  --parameters @parameters.json
 ```
 
 ### Verify Deployment
