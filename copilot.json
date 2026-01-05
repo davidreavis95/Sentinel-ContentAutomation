@@ -1,0 +1,35 @@
+{
+  "exclude": {
+    "description": "Excludes suggestions for certain files or directories.",
+    "paths": [
+      "path/to/example",
+      "docs/temp-files"
+    ]
+  },
+  "repository_faq": {
+    "general_questions": [
+      {
+        "q": "What is this repository for?",
+        "a": "This repository automates the deployment and management of Microsoft Sentinel resources using CI/CD pipelines and code templates."
+      },
+      {
+        "q": "What languages are used in this repository?",
+        "a": "This repository uses primarily Bicep and Python, with Bicep for resource deployment templates and Python for automating tasks."
+      },
+      {
+        "q": "How do I deploy automations from this repository?",
+        "a": "Use the GitHub Actions workflows included in this repository. They deploy directly to your Azure environment."
+      }
+    ],
+    "technical_questions": [
+      {
+        "q": "Where are the ARM/Bicep templates located?",
+        "a": "These templates are located in the 'templates/' directory."
+      },
+      {
+        "q": "How do I update the deployment workflows?",
+        "a": "Modify the YAML files in the '.github/workflows/' directory and update the repository to trigger a GitHub Action."
+      }
+    ]
+  }
+}
