@@ -1,0 +1,233 @@
+name: Deploy to Azure Sentinel
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.bicep'
+      - '**.json'
+      - '**.py'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - development
+          - production
+      resourceGroup:
+        description: 'Azure Resource Group name'
+        required: true
+        type: string
+      location:
+        description: 'Azure region'
+        required: false
+        type: string
+        default: 'eastus'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-development:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'development')
+    environment: 
+      name: development
+      url: https://portal.azure.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Install Bicep CLI
+        run: |
+          az bicep install
+          az bicep version
+          
+      - name: Set deployment variables
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "RESOURCE_GROUP=${{ github.event.inputs.resourceGroup }}" >> $GITHUB_ENV
+            echo "LOCATION=${{ github.event.inputs.location }}" >> $GITHUB_ENV
+            echo "PARAM_FILE=parameters.dev.json" >> $GITHUB_ENV
+          else
+            echo "RESOURCE_GROUP=${{ secrets.DEV_RESOURCE_GROUP || 'rg-sentinel-dev' }}" >> $GITHUB_ENV
+            echo "LOCATION=${{ secrets.DEV_LOCATION || 'eastus' }}" >> $GITHUB_ENV
+            echo "PARAM_FILE=parameters.dev.json" >> $GITHUB_ENV
+          fi
+          
+      - name: Create Resource Group
+        run: |
+          echo "Creating resource group: $RESOURCE_GROUP in $LOCATION"
+          az group create --name $RESOURCE_GROUP --location $LOCATION
+          
+      - name: Validate Bicep Template
+        run: |
+          echo "Validating deployment..."
+          az deployment group validate \
+            --resource-group $RESOURCE_GROUP \
+            --template-file main.bicep \
+            --parameters @$PARAM_FILE
+            
+      - name: Deploy using Python script
+        run: |
+          echo "Deploying Sentinel to $RESOURCE_GROUP..."
+          python deploy_rest.py \
+            --resource-group $RESOURCE_GROUP \
+            --location $LOCATION \
+            --parameter-file $PARAM_FILE
+            
+      - name: Get deployment outputs
+        id: outputs
+        run: |
+          DEPLOYMENT_NAME=$(az deployment group list \
+            --resource-group $RESOURCE_GROUP \
+            --query "[0].name" -o tsv)
+          
+          if [ -n "$DEPLOYMENT_NAME" ]; then
+            WORKSPACE_ID=$(az deployment group show \
+              --resource-group $RESOURCE_GROUP \
+              --name $DEPLOYMENT_NAME \
+              --query "properties.outputs.workspaceId.value" -o tsv)
+            
+            WORKSPACE_NAME=$(az deployment group show \
+              --resource-group $RESOURCE_GROUP \
+              --name $DEPLOYMENT_NAME \
+              --query "properties.outputs.workspaceName.value" -o tsv)
+            
+            echo "workspace_id=$WORKSPACE_ID" >> $GITHUB_OUTPUT
+            echo "workspace_name=$WORKSPACE_NAME" >> $GITHUB_OUTPUT
+            
+            echo "### Deployment Successful! 🚀" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Workspace Name:** $WORKSPACE_NAME" >> $GITHUB_STEP_SUMMARY
+            echo "**Workspace ID:** $WORKSPACE_ID" >> $GITHUB_STEP_SUMMARY
+            echo "**Resource Group:** $RESOURCE_GROUP" >> $GITHUB_STEP_SUMMARY
+            echo "**Location:** $LOCATION" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    environment: 
+      name: production
+      url: https://portal.azure.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Install Bicep CLI
+        run: |
+          az bicep install
+          az bicep version
+          
+      - name: Set deployment variables
+        run: |
+          echo "RESOURCE_GROUP=${{ github.event.inputs.resourceGroup }}" >> $GITHUB_ENV
+          echo "LOCATION=${{ github.event.inputs.location }}" >> $GITHUB_ENV
+          echo "PARAM_FILE=parameters.json" >> $GITHUB_ENV
+          
+      - name: Create Resource Group
+        run: |
+          echo "Creating resource group: $RESOURCE_GROUP in $LOCATION"
+          az group create --name $RESOURCE_GROUP --location $LOCATION
+          
+      - name: Validate Bicep Template
+        run: |
+          echo "Validating deployment..."
+          az deployment group validate \
+            --resource-group $RESOURCE_GROUP \
+            --template-file main.bicep \
+            --parameters @$PARAM_FILE
+            
+      - name: What-If Deployment
+        run: |
+          echo "Previewing changes..."
+          az deployment group what-if \
+            --resource-group $RESOURCE_GROUP \
+            --template-file main.bicep \
+            --parameters @$PARAM_FILE
+            
+      - name: Deploy using Python script
+        run: |
+          echo "Deploying Sentinel to $RESOURCE_GROUP..."
+          python deploy_rest.py \
+            --resource-group $RESOURCE_GROUP \
+            --location $LOCATION \
+            --parameter-file $PARAM_FILE
+            
+      - name: Get deployment outputs
+        id: outputs
+        run: |
+          DEPLOYMENT_NAME=$(az deployment group list \
+            --resource-group $RESOURCE_GROUP \
+            --query "[0].name" -o tsv)
+          
+          if [ -n "$DEPLOYMENT_NAME" ]; then
+            WORKSPACE_ID=$(az deployment group show \
+              --resource-group $RESOURCE_GROUP \
+              --name $DEPLOYMENT_NAME \
+              --query "properties.outputs.workspaceId.value" -o tsv)
+            
+            WORKSPACE_NAME=$(az deployment group show \
+              --resource-group $RESOURCE_GROUP \
+              --name $DEPLOYMENT_NAME \
+              --query "properties.outputs.workspaceName.value" -o tsv)
+            
+            echo "workspace_id=$WORKSPACE_ID" >> $GITHUB_OUTPUT
+            echo "workspace_name=$WORKSPACE_NAME" >> $GITHUB_OUTPUT
+            
+            echo "### Production Deployment Successful! 🎉" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Workspace Name:** $WORKSPACE_NAME" >> $GITHUB_STEP_SUMMARY
+            echo "**Workspace ID:** $WORKSPACE_ID" >> $GITHUB_STEP_SUMMARY
+            echo "**Resource Group:** $RESOURCE_GROUP" >> $GITHUB_STEP_SUMMARY
+            echo "**Location:** $LOCATION" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+      - name: Create deployment tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          TAG_NAME="deployment-$(date +%Y%m%d-%H%M%S)"
+          git tag -a "$TAG_NAME" -m "Production deployment to $RESOURCE_GROUP"
+          git push origin "$TAG_NAME" || echo "Failed to push tag (may need permissions)"
+        continue-on-error: true

@@ -1,10 +1,15 @@
 # Microsoft Sentinel Content Automation
 
+[![Validate Bicep Templates](https://github.com/davidreavis95/Sentinel-ContentAutomation/workflows/Validate%20Bicep%20Templates/badge.svg)](https://github.com/davidreavis95/Sentinel-ContentAutomation/actions/workflows/validate.yml)
+[![Deploy to Azure Sentinel](https://github.com/davidreavis95/Sentinel-ContentAutomation/workflows/Deploy%20to%20Azure%20Sentinel/badge.svg)](https://github.com/davidreavis95/Sentinel-ContentAutomation/actions/workflows/deploy.yml)
+[![CodeQL Security Scanning](https://github.com/davidreavis95/Sentinel-ContentAutomation/workflows/CodeQL%20Security%20Scanning/badge.svg)](https://github.com/davidreavis95/Sentinel-ContentAutomation/actions/workflows/codeql.yml)
+
 This repository provides Infrastructure-as-Code (IaC) using Azure Bicep to automatically deploy Microsoft Sentinel and all associated content types including Analytical Rules, Parsers, Workbooks, Advanced Hunting Queries, and Watchlists.
 
 ## 🚀 Features
 
 - **Automated Deployment**: Deploy Microsoft Sentinel workspace with a single command
+- **CI/CD Integration**: GitHub Actions workflows for automated validation and deployment
 - **Comprehensive Content Types**:
   - ✅ Analytical Rules (Scheduled query-based alerts)
   - ✅ Parsers (KQL functions for data normalization)
@@ -15,6 +20,7 @@ This repository provides Infrastructure-as-Code (IaC) using Azure Bicep to autom
 - **Modular Architecture**: Easily customize or extend content
 - **Multiple Environments**: Separate parameter files for dev/prod
 - **REST API Deployment**: Direct Azure REST API integration for deployment automation
+- **Security Scanning**: Automated CodeQL security analysis
 
 ## 📋 Prerequisites
 
@@ -38,23 +44,41 @@ The deploying user/service principal needs:
 
 ```
 .
-├── main.bicep                  # Main Bicep template
-├── modules/                    # Bicep modules for each content type
-│   ├── analyticalRules.bicep   # Alert rules configuration
-│   ├── parsers.bicep           # KQL parser functions
-│   ├── workbooks.bicep         # Security dashboards
-│   ├── huntingQueries.bicep    # Threat hunting queries
-│   └── watchlists.bicep        # Reference data lists
-├── parameters.json             # Production parameters
-├── parameters.dev.json         # Development parameters
-├── deploy_rest.py              # REST API deployment script
-├── requirements.txt            # Python dependencies
-└── README.md                   # This file
+├── .github/
+│   ├── workflows/               # GitHub Actions workflows
+│   │   ├── validate.yml         # Template validation workflow
+│   │   ├── deploy.yml           # Deployment workflow
+│   │   └── codeql.yml           # Security scanning workflow
+│   └── parameters.ci.json       # CI/CD parameters
+├── main.bicep                   # Main Bicep template
+├── modules/                     # Bicep modules for each content type
+│   ├── analyticalRules.bicep    # Alert rules configuration
+│   ├── parsers.bicep            # KQL parser functions
+│   ├── workbooks.bicep          # Security dashboards
+│   ├── huntingQueries.bicep     # Threat hunting queries
+│   └── watchlists.bicep         # Reference data lists
+├── parameters.json              # Production parameters
+├── parameters.dev.json          # Development parameters
+├── deploy_rest.py               # REST API deployment script
+├── requirements.txt             # Python dependencies
+├── CI_CD_SETUP.md               # CI/CD configuration guide
+└── README.md                    # This file
 ```
 
 ## 🎯 Quick Start
 
-### REST API Deployment (Recommended)
+### Option 1: GitHub Actions CI/CD (Recommended for Teams)
+
+For automated deployments with validation and security scanning:
+
+1. **Fork or clone this repository**
+2. **Configure GitHub Secrets** (see [CI/CD Setup Guide](CI_CD_SETUP.md))
+3. **Push to main branch** - automatic deployment to development
+4. **Manual production deployment** - use workflow_dispatch
+
+See [CI_CD_SETUP.md](CI_CD_SETUP.md) for detailed setup instructions.
+
+### Option 2: REST API Deployment (Recommended for Manual Deployment)
 
 ```bash
 # Login to Azure
@@ -76,7 +100,7 @@ python deploy_rest.py -g rg-sentinel-prod -w
 python deploy_rest.py -g rg-sentinel-prod -s 12345678-1234-1234-1234-123456789012
 ```
 
-### Alternative: Azure CLI Direct
+### Option 3: Azure CLI Direct
 
 ```bash
 # Login to Azure
@@ -95,6 +119,38 @@ az deployment group create \
   --template-file main.bicep \
   --parameters @parameters.json
 ```
+
+## 🔄 CI/CD Integration
+
+This repository includes GitHub Actions workflows for automated validation and deployment:
+
+### Workflows
+
+1. **Validate** - Runs on every PR and push
+   - Validates Bicep templates
+   - Checks Python syntax
+   - Runs what-if deployment preview
+   
+2. **Deploy** - Automated deployment
+   - Development: Automatic on push to main
+   - Production: Manual with approval
+   
+3. **CodeQL** - Security scanning
+   - Weekly scans
+   - Pull request analysis
+
+### Quick Setup
+
+```bash
+# 1. Create Service Principal
+az ad sp create-for-rbac --name "github-sentinel" --role "Contributor" --sdk-auth
+
+# 2. Add as AZURE_CREDENTIALS secret in GitHub
+
+# 3. Push to main - automatic validation and deployment!
+```
+
+**Full CI/CD setup guide:** [CI_CD_SETUP.md](CI_CD_SETUP.md)
 
 ## 🔧 REST API Deployment
 
@@ -339,10 +395,17 @@ This project is provided as-is for educational and deployment purposes.
 
 ## 🔗 Resources
 
+### Azure Sentinel & Bicep
 - [Microsoft Sentinel Documentation](https://docs.microsoft.com/azure/sentinel/)
 - [Azure Bicep Documentation](https://docs.microsoft.com/azure/azure-resource-manager/bicep/)
 - [KQL Reference](https://docs.microsoft.com/azure/data-explorer/kusto/query/)
 - [Sentinel GitHub Repository](https://github.com/Azure/Azure-Sentinel)
+
+### CI/CD & Automation
+- [Azure Sentinel CI/CD Documentation](https://learn.microsoft.com/en-us/azure/sentinel/ci-cd?tabs=github)
+- [Custom Deployments for CI/CD Pipelines](https://learn.microsoft.com/en-us/azure/sentinel/ci-cd-custom-deploy?tabs=github)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [CI/CD Setup Guide](CI_CD_SETUP.md) (This Repository)
 
 ## 📞 Support
 
